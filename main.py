@@ -5,7 +5,7 @@ from openpyxl import load_workbook
 
 def sigma_p(a, e, T, e_dot):
     R = 8.314
-    W = math.exp(a[6] * e)
+    W = math.exp(-a[6] * e)
     T1 = math.exp(a[3] / (R * (T + 273)))
     T2 = math.exp(a[5] / (R * (T + 273)))
     e1 = e ** a[1]
@@ -48,12 +48,12 @@ def hooke_jeeves(x, s, alpha, epsilon, e, T, e_dot, sigma_test, constraints):
 def trial(x, s, constraints):
     for j in range(len(x)):
         trial_x = x
-        np.add.at(trial_x, j, s * constraints[1, j])
+        np.add.at(trial_x, [j], s * constraints[1, j])
         if objective(trial_x, e, T, e_dot, sigma_test) < objective(x, e, T, e_dot, sigma_test) and \
                 constraints[1, j] > trial_x > constraints[0, j]:
             x = trial_x
         else:
-            np.add.at(trial_x, j, -2 * s * constraints[1, j])
+            np.add.at(trial_x, [j], -2 * s * constraints[1, j])
             if objective(trial_x, e, T, e_dot, sigma_test) < objective(x, e, T, e_dot, sigma_test) and \
                     constraints[1, j] > trial_x > constraints[0, j]:
                 x = trial_x
@@ -82,12 +82,12 @@ T = np.asarray(T)
 e_dot = np.asarray(e_dot)
 e = np.asarray(e)
 # data = list(zip(e, sigma_test, T, e_dot))
-a = np.array([400, 0.5, 0.5, 5000, 0.5, 45000, 0.5])
+a = np.array([500, 0.5, 0.5, 5000, 0.5, 45000, 0.5])
 constraints = np.array([[1, 0, 0, 1, 0, 1, 0], [1000, 1, 1, 10000, 1, 90000, 1]])
 # relative step size
 s = 0.099
 # 0 < alpha < 1
-alpha = 0.730
+alpha = 0.720
 # precision
 epsilon = 0.00000001
 result = hooke_jeeves(a, s, alpha, epsilon, e, T, e_dot, sigma_test, constraints)
