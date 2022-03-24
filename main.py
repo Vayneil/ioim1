@@ -1,4 +1,5 @@
 import math
+import random
 from copy import deepcopy
 from openpyxl import load_workbook
 from openpyxl import Workbook
@@ -25,7 +26,6 @@ def objective(a, e, T, e_dot, sigma_test):
             err_squared = (sigma_test[i][j] - sigma_p(a, e[i][j], T[i], e_dot[i])) ** 2
             err_relative = err_squared / sigma_test[i][j]
             sum = sum + err_relative
-    print(sum)
     return sum
 
 
@@ -45,7 +45,7 @@ def hooke_jeeves(x, s, alpha, epsilon, e, T, e_dot, sigma_test, constraints):
                     temp.append(x[i] - xb1[i])
                     # x[i] = temp
                     if not constraints[1][i] > temp[i] > constraints[0][i]:
-                        print('limip ipsum')
+                        # print('limip ipsum')
                         break
                 else:
                     x = deepcopy(temp)
@@ -71,12 +71,12 @@ def trial(x, s, constraints):
             if objective(trial_x, e, T, e_dot, sigma_test) < objective(x, e, T, e_dot, sigma_test) and \
                     constraints[1][j] > trial_x[j] > constraints[0][j]:
                 x = deepcopy(trial_x)
-    print(x)
+    # print(x)
     return x
 
 
 # load Excel file and initialize arrays
-wb = load_workbook('./Doswiadczenia.xlsx', read_only=False)
+wb = load_workbook('/home/vay/Desktop/Doswiadczenia.xlsx', read_only=False)
 e = []
 sigma_test = []
 T = []
@@ -84,39 +84,58 @@ e_dot = []
 
 # set experimental values
 for ws in wb.worksheets:
-    e_values = [ws.cell(i, 1).value for i in range(3, 23)]
-    sigma_values = [ws.cell(i, 2).value for i in range(3, 23)]
+    e_values = [ws.cell(i, 1).value for i in range(2, 23)]
+    sigma_values = [ws.cell(i, 2).value for i in range(2, 23)]
     T.append(ws.cell(2, 4).value)
     e_dot.append(ws.cell(2, 5).value)
     e.append(e_values)
     sigma_test.append(sigma_values)
 
-a = [500, 0.5, 0.5, 5000, 0.5, 45000, 0.5]
+
+smallest = 10000000000000.0
 constraints = [[1.0, 0.0, 0.0, 1.0, 0.0, 1.0, 0.0], [1000.0, 1.0, 1.0, 10000.0, 1.0, 90000.0, 1.0]]
-# relative step size
-s = 0.1
+a = [0, 0, 0, 0, 0, 0, 0]
+s = 0.05
 # 0 < alpha < 1
-alpha = 0.75
+alpha = 0.8
 # precision
 epsilon = 0.0001
-objective_values = []
-result_a = hooke_jeeves(a, s, alpha, epsilon, e, T, e_dot, sigma_test, constraints)
-result_objective = objective(result_a, e, T, e_dot, sigma_test)
+result_a = []
+result_objective = 0
+for i in range(10):
+    for i in range(7):
+        a[i] = random.uniform(constraints[1][i], constraints[0][i])
+        # a = [500, 0.5, 0.5, 5000, 0.5, 45000, 0.5]
+        # relative step size
+    objective_values = []
+    result_a = hooke_jeeves(a, s, alpha, epsilon, e, T, e_dot, sigma_test, constraints)
+    result_objective = objective(result_a, e, T, e_dot, sigma_test)
+    print(result_objective)
+    if result_objective < smallest:
+        smallest = result_objective
 # print(result_a)
 
 # ws1 = wb.create_sheet(title="Results")
-wb1 = load_workbook('./Results.xlsx', read_only=False)
-ws1 = wb.worksheets[0]
-ws1.cell(1, 3, result_objective)
-for i in range(len(result_a)):
-    ws1.cell(i + 1, 1, result_a[i])
-for i in range(len(objective_values)):
-    ws1.cell(i + 1, 2, objective_values[i])
+# wb1 = load_workbook('/home/vay/Desktop/Results.xlsx', read_only=False)
+# ws1 = wb1.worksheets[0]
+# ws1.cell(1, 3, result_objective)
+# for i in range(len(result_a)):
+#     ws1.cell(i + 1, 1, result_a[i])
+# for i in range(len(objective_values)):
+#     ws1.cell(i + 1, 2, objective_values[i])
 
+# for ws in wb.worksheets:
+#     for i in range(len(e[0])):
+#         e1 = e[0][i]
+#         T1 = ws.cell(2, 4).value
+#         edot1 = ws.cell(2, 5).value
+#         ws.cell(i + 3, 3, sigma_p(result_a, e1, T1, edot1))
 
-wb1.save('./Results.xlsx')
-wb.close()
-wb1.close()
+# print(e)
+# wb1.save('/home/vay/Desktop/Results.xlsx')
+# wb.save('/home/vay/Desktop/Doswiadczenia.xlsx')
+# wb.close()
+# wb1.close()
 
 # 127.41171114187962
 # [179.55596276914937, 0.5, 0.12200341075755708, -1014.2046975999997, 5.8713463056566155, 34944.01339230601, 0.23720028880244573]
